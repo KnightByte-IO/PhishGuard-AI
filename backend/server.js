@@ -19,24 +19,40 @@ const app = express();
 // Middleware — parse JSON request bodies
 app.use(express.json());
 
-// CORS — allow frontend (React) to call this API from a different port
+// CORS — allow frontend to call this API from local dev and deployed hosts
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Local dev: Vite may use 5173, 5174, 5175, etc.
+  if (/^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+    return true;
+  }
+
+  // Render, Vercel, Netlify frontends
+  if (
+    /^https:\/\/[\w.-]+\.onrender\.com$/.test(origin) ||
+    /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin) ||
+    /^https:\/\/[\w.-]+\.netlify\.app$/.test(origin)
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-
-      const allowed = process.env.CLIENT_URL;
-      if (allowed && origin === allowed) {
-        return callback(null, true);
-      }
-
-      // Local dev: Vite may use 5173, 5174, 5175, etc. when ports are busy
-      if (/^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
-        return callback(null, true);
-      }
-
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,

@@ -214,6 +214,59 @@ npm run dev
 
 ---
 
+## ☁️ Deployment
+
+### Live API (Render)
+
+| Service | URL |
+|---------|-----|
+| **Backend API** | https://phishguard-ai-api-qdkr.onrender.com |
+| **Health check** | https://phishguard-ai-api-qdkr.onrender.com/api/health |
+
+### Frontend → Production API
+
+`frontend/.env.production` is preconfigured:
+
+```env
+VITE_API_URL=https://phishguard-ai-api-qdkr.onrender.com/api
+```
+
+Build and deploy the frontend:
+
+```bash
+cd frontend
+npm run build
+# Deploy the dist/ folder to Vercel, Netlify, or Render Static Site
+```
+
+### Local frontend + Render backend
+
+In `frontend/.env`:
+
+```env
+VITE_API_URL=https://phishguard-ai-api-qdkr.onrender.com/api
+```
+
+Restart Vite after changing `.env`.
+
+### Render backend environment variables
+
+Set these in the Render dashboard for the API service:
+
+| Variable | Example |
+|----------|---------|
+| `MONGODB_URI` | Your Atlas connection string |
+| `JWT_SECRET` | Long random string |
+| `GEMINI_API_KEY` | `AIza...` from Google AI Studio |
+| `VIRUSTOTAL_API_KEY` | Optional |
+| `GOOGLE_SAFE_BROWSING_API_KEY` | Optional |
+| `URLSCAN_API_KEY` | Optional |
+| `CLIENT_URL` | Your frontend URL (comma-separated if multiple) |
+
+> Free Render instances **spin down after inactivity** — the first request may take 30–60 seconds to wake up.
+
+---
+
 ## 🔑 API Keys Setup
 
 | Service | Get key | Enable in console |
