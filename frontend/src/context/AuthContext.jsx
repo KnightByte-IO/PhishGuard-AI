@@ -81,6 +81,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
   };
 
+  const updateUser = useCallback((userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  }, []);
+
   const value = {
     user,
     token,
@@ -89,6 +94,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    updateUser,
   };
 
   return (

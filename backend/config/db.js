@@ -13,15 +13,17 @@ const mongoose = require('mongoose');
  * Called once when the server starts.
  */
 const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+  const uri = process.env.MONGODB_URI;
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Database connection error: ${error.message}`);
-    // Exit process if DB connection fails — server cannot run without DB
-    process.exit(1);
+  if (!uri || (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://'))) {
+    throw new Error(
+      'Invalid MONGODB_URI — must start with mongodb:// or mongodb+srv://'
+    );
   }
+
+  const conn = await mongoose.connect(uri);
+  console.log(`MongoDB Connected: ${conn.connection.host}`);
+  return conn;
 };
 
 module.exports = connectDB;
