@@ -59,6 +59,25 @@ app.use(
   })
 );
 
+// Root — friendly response when visiting the API URL in a browser
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'PhishGuard AI API',
+    status: 'running',
+    version: '1.0.0',
+    message: 'API is live. Use the PhishGuard frontend app — this URL is for API requests only.',
+    documentation: 'https://github.com/KnightByte-IO/PhishGuard-AI',
+    endpoints: {
+      health: 'GET /api/health',
+      register: 'POST /api/auth/register',
+      login: 'POST /api/auth/login',
+      analyzeUrl: 'POST /api/url/analyze',
+      threatIntel: 'POST /api/url/intelligence',
+      explain: 'POST /api/url/explain',
+    },
+  });
+});
+
 // Health check — useful to verify server is running
 app.get('/api/health', (req, res) => {
   res.status(200).json({
