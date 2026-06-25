@@ -13,7 +13,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-[Live Demo](#) · [Quick Start](#-quick-start) · [API Reference](#-api-overview) · [Architecture](#-how-it-works)
+[Live Demo](#) · [Quick Start](#-quick-start) · [Project Report](https://drive.google.com/file/d/1KGpM4BpGWUpSvoUH2dn0IajDQGyO2whz/view?usp=drive_link) · [API Reference](#-api-overview) · [Architecture](#-how-it-works)
 
 <br/>
 
@@ -134,6 +134,14 @@ flowchart LR
 | URLScan.io | 10% | Live page & redirects |
 
 > Unavailable sources are skipped — remaining weights are redistributed automatically.
+
+---
+
+## 📄 Project Report
+
+Full project documentation, architecture, and implementation details:
+
+**[📥 PhishGuard AI — Complete Project Report (PDF)](https://drive.google.com/file/d/1KGpM4BpGWUpSvoUH2dn0IajDQGyO2whz/view?usp=drive_link)**
 
 ---
 
