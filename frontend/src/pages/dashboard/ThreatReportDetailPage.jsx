@@ -1,13 +1,17 @@
 /**
  * pages/dashboard/ThreatReportDetailPage.jsx
  *
- * Single threat report detail view with rule-based + AI explanation.
+ * Single threat report with rule-based scan, intelligence, and AI explanation.
  * Route: /dashboard/threat-reports/:scanId
  */
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getThreatReport, explainUrl } from '../../services/urlService';
+import {
+  getThreatReport,
+  explainUrl,
+  runThreatIntelligence,
+} from '../../services/urlService';
 import ThreatReportDetail from '../../components/threat/ThreatReportDetail';
 
 function ThreatReportDetailPage() {
@@ -15,6 +19,7 @@ function ThreatReportDetailPage() {
   const [scan, setScan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
+  const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [error, setError] = useState('');
@@ -53,10 +58,21 @@ function ThreatReportDetailPage() {
     }
   };
 
+  const handleRunIntelligence = async () => {
+    setIntelligenceLoading(true);
+
+    try {
+      const response = await runThreatIntelligence(scanId);
+      setScan(response.data);
+    } catch (err) {
+      console.error('Intelligence scan error:', err);
+    } finally {
+      setIntelligenceLoading(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="p-8 text-cyber-muted">Loading threat report...</div>
-    );
+    return <div className="p-8 text-cyber-muted">Loading threat report...</div>;
   }
 
   if (error) {
@@ -75,6 +91,8 @@ function ThreatReportDetailPage() {
         aiError={aiError}
         onGenerateAi={handleGenerateAi}
         aiLoading={aiLoading}
+        onRunIntelligence={handleRunIntelligence}
+        intelligenceLoading={intelligenceLoading}
       />
     </div>
   );

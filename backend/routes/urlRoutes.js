@@ -14,6 +14,7 @@ const {
   explainUrl,
   getReports,
   getReportById,
+  runIntelligence,
 } = require('../controllers/urlController');
 
 // All URL routes require a valid JWT
@@ -21,6 +22,7 @@ router.use(protect);
 
 router.post('/analyze', analyzeUrl);
 router.post('/explain', explainUrl);
+router.post('/intelligence', runIntelligence);
 router.get('/history', getHistory);
 router.get('/stats', getStats);
 router.get('/reports', getReports);

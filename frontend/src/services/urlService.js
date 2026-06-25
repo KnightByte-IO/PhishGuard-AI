@@ -53,3 +53,11 @@ export const getThreatReport = async (scanId) => {
   const response = await api.get(`/url/reports/${scanId}`);
   return response.data;
 };
+
+/**
+ * POST /api/url/intelligence — Run multi-source threat intelligence scan.
+ */
+export const runThreatIntelligence = async (scanId) => {
+  const response = await api.post('/url/intelligence', { scanId });
+  return response.data;
+};

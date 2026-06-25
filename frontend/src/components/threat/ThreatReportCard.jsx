@@ -38,6 +38,11 @@ function ThreatReportCard({ scan, showAiBadge = true }) {
               AI ✓
             </span>
           )}
+          {scan.intelligenceGenerated && (
+            <span className="text-xs text-cyber-warning bg-cyber-warning/10 px-2 py-0.5 rounded">
+              Intel ✓
+            </span>
+          )}
           {scan.attackType && (
             <span className="text-xs text-cyber-danger">{scan.attackType}</span>
           )}

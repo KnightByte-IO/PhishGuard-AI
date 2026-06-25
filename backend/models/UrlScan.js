@@ -244,6 +244,108 @@ const urlScanSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ─── Threat Intelligence Engine (Milestone 4) ───────────────────────────
+
+    /**
+     * virusTotal — Multi-vendor URL reputation from VirusTotal API.
+     * Includes malicious/suspicious counts and which vendors flagged the URL.
+     */
+    virusTotal: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    /**
+     * whois — Domain registration data from RDAP/WHOIS lookup.
+     * Registrar, dates, country, and domain age help spot newly registered phishing domains.
+     */
+    whois: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    /**
+     * safeBrowsing — Google Safe Browsing threat check results.
+     * Flags for phishing, malware, and unwanted software.
+     */
+    safeBrowsing: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    /**
+     * urlScan — Live page analysis from URLScan.io.
+     * Final URL, page title, IP, hosting provider, and redirect chain.
+     */
+    urlScan: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    /**
+     * confidence — How many intelligence sources responded (0–100%).
+     * 100% = all 5 sources (rule + 4 APIs) contributed to the final score.
+     */
+    confidence: {
+      type: Number,
+      default: null,
+      min: 0,
+      max: 100,
+    },
+
+    /**
+     * finalRiskScore — Aggregated risk score combining all intelligence sources.
+     * Different from rule-based riskScore which is scanner-only.
+     */
+    finalRiskScore: {
+      type: Number,
+      default: null,
+      min: 0,
+      max: 100,
+    },
+
+    /**
+     * finalThreatLevel — Threat level derived from finalRiskScore.
+     */
+    finalThreatLevel: {
+      type: String,
+      default: null,
+    },
+
+    /**
+     * intelligenceRecommendation — Actionable advice from aggregated analysis.
+     */
+    intelligenceRecommendation: {
+      type: [String],
+      default: [],
+    },
+
+    /**
+     * intelligenceGenerated — True when threat intelligence scan has been run.
+     */
+    intelligenceGenerated: {
+      type: Boolean,
+      default: false,
+    },
+
+    /**
+     * intelligenceGeneratedAt — When the intelligence scan was performed.
+     */
+    intelligenceGeneratedAt: {
+      type: Date,
+      default: null,
+    },
+
+    intelligenceSourcesUsed: {
+      type: [String],
+      default: [],
+    },
+
+    intelligenceSourcesFailed: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

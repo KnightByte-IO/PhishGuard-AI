@@ -7,6 +7,7 @@
 
 const urlAnalysisService = require('../services/urlAnalysisService');
 const urlExplanationService = require('../services/urlExplanationService');
+const threatIntelligenceService = require('../services/threatIntelligenceService');
 
 /**
  * POST /api/url/analyze
@@ -166,6 +167,45 @@ const getReportById = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/url/intelligence
+ * Run full threat intelligence scan on an existing URL scan (protected).
+ *
+ * Flow: Fetch Scan → Query all APIs in parallel → Aggregate → Store → Return
+ * Body: { scanId: "..." }
+ */
+const runIntelligence = async (req, res) => {
+  try {
+    const { scanId } = req.body;
+
+    if (!scanId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a scanId',
+      });
+    }
+
+    const result = await threatIntelligenceService.runThreatIntelligence(
+      req.user._id,
+      scanId
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Threat intelligence scan completed',
+      data: result.scan,
+      aggregated: result.aggregated,
+      sourcesAvailable: result.sourcesAvailable,
+      sourcesFailed: result.sourcesFailed,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Threat intelligence scan failed',
+    });
+  }
+};
+
 module.exports = {
   analyzeUrl,
   getHistory,
@@ -173,4 +213,5 @@ module.exports = {
   explainUrl,
   getReports,
   getReportById,
+  runIntelligence,
 };

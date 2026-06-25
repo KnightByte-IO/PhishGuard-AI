@@ -1,25 +1,34 @@
 /**
  * components/threat/ThreatTimeline.jsx
  *
- * Visual timeline showing scan date and AI explanation generation.
+ * Visual timeline: URL scan → Intelligence scan → AI explanation.
  */
 
 function ThreatTimeline({ scan }) {
   const events = [
     {
-      label: 'URL Scanned',
+      label: 'URL Scanned (Rule Engine)',
       date: scan.analysisDate,
       icon: '🔍',
-      description: `Rule-based analysis completed — Risk: ${scan.riskScore}/100 (${scan.riskLevel})`,
+      description: `Risk: ${scan.riskScore}/100 (${scan.riskLevel})`,
     },
   ];
+
+  if (scan.intelligenceGenerated && scan.intelligenceGeneratedAt) {
+    events.push({
+      label: 'Threat Intelligence Scan',
+      date: scan.intelligenceGeneratedAt,
+      icon: '🛡️',
+      description: `Final score: ${scan.finalRiskScore}/100 (${scan.finalThreatLevel}) — ${scan.confidence}% confidence`,
+    });
+  }
 
   if (scan.aiGenerated && scan.aiGeneratedAt) {
     events.push({
       label: 'AI Explanation Generated',
       date: scan.aiGeneratedAt,
       icon: '🤖',
-      description: `Threat type identified: ${scan.attackType || 'Unknown'}`,
+      description: `Threat type: ${scan.attackType || 'Unknown'}`,
     });
   }
 
@@ -34,7 +43,7 @@ function ThreatTimeline({ scan }) {
                 {event.icon}
               </div>
               {index < events.length - 1 && (
-                <div className="w-px flex-1 bg-cyber-border my-1" />
+                <div className="w-px flex-1 bg-cyber-border my-1 min-h-[24px]" />
               )}
             </div>
             <div className="pb-4">

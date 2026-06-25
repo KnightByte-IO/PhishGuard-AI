@@ -1,20 +1,32 @@
 /**
  * components/threat/ThreatReportDetail.jsx
  *
- * Full threat report view — combines rule-based scan + AI explanation + timeline.
+ * Full threat report view — rule-based scan, AI explanation, and threat intelligence.
  */
 
 import { Link } from 'react-router-dom';
 import RiskScoreGauge from '../url/RiskScoreGauge';
 import SecurityCheckList from '../url/SecurityCheckList';
 import AiExplanationPanel from './AiExplanationPanel';
+import ThreatIntelligenceReport from './ThreatIntelligenceReport';
 import ThreatTimeline from './ThreatTimeline';
 import { getRiskStyle } from '../../utils/riskHelpers';
 
-function ThreatReportDetail({ scan, aiAvailable, aiError, onGenerateAi, aiLoading }) {
+function ThreatReportDetail({
+  scan,
+  aiAvailable,
+  aiError,
+  onGenerateAi,
+  aiLoading,
+  onRunIntelligence,
+  intelligenceLoading,
+}) {
   if (!scan) return null;
 
   const style = getRiskStyle(scan.riskLevel);
+  const displayScore = scan.finalRiskScore ?? scan.riskScore;
+  const displayLevel = scan.finalThreatLevel ?? scan.riskLevel;
+  const finalStyle = getRiskStyle(displayLevel);
 
   return (
     <div className="space-y-6">
@@ -33,40 +45,63 @@ function ThreatReportDetail({ scan, aiAvailable, aiError, onGenerateAi, aiLoadin
           </p>
         </div>
 
-        {!scan.aiGenerated && (
-          <button
-            onClick={onGenerateAi}
-            disabled={aiLoading}
-            className="btn-primary whitespace-nowrap disabled:opacity-50"
-          >
-            {aiLoading ? 'Generating...' : '🤖 Generate AI Explanation'}
-          </button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {!scan.intelligenceGenerated && (
+            <button
+              onClick={onRunIntelligence}
+              disabled={intelligenceLoading}
+              className="btn-primary whitespace-nowrap disabled:opacity-50 text-sm"
+            >
+              {intelligenceLoading ? 'Scanning...' : '🛡️ Run Intelligence Scan'}
+            </button>
+          )}
+          {!scan.aiGenerated && (
+            <button
+              onClick={onGenerateAi}
+              disabled={aiLoading}
+              className="btn-secondary whitespace-nowrap disabled:opacity-50 text-sm"
+            >
+              {aiLoading ? 'Generating...' : '🤖 AI Explanation'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Overall Risk */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <RiskScoreGauge score={scan.riskScore} level={scan.riskLevel} />
+        <RiskScoreGauge score={displayScore} level={displayLevel} />
         <div className="lg:col-span-3 card">
           <h3 className="text-sm font-medium text-cyber-muted mb-3">Overall Risk Assessment</h3>
           <div className="flex flex-wrap items-center gap-4 mb-4">
-            <span className={`text-4xl font-bold ${style.text}`}>{scan.riskScore}%</span>
+            <span className={`text-4xl font-bold ${finalStyle.text}`}>{displayScore}%</span>
             <span
-              className={`px-3 py-1 rounded-full text-sm font-semibold ${style.bg} ${style.text} ${style.border} border`}
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${finalStyle.bg} ${finalStyle.text} ${finalStyle.border} border`}
             >
-              {scan.riskLevel}
+              {displayLevel}
             </span>
             {scan.attackType && (
               <span className="px-3 py-1 rounded-full text-sm bg-cyber-danger/10 text-cyber-danger border border-cyber-danger/30">
                 {scan.attackType}
               </span>
             )}
+            {scan.confidence != null && (
+              <span className="px-3 py-1 rounded-full text-sm bg-cyber-accent/10 text-cyber-accent border border-cyber-accent/30">
+                {scan.confidence}% confidence
+              </span>
+            )}
           </div>
           <p className="text-xs text-cyber-muted">
-            Risk score determined by rule-based URL scanner — not by AI.
+            {scan.intelligenceGenerated
+              ? 'Final score aggregated from rule engine + external threat intelligence sources.'
+              : 'Rule-based score — run Intelligence Scan for multi-source analysis.'}
           </p>
         </div>
       </div>
+
+      {/* Threat Intelligence Report */}
+      {(scan.intelligenceGenerated || intelligenceLoading) && (
+        <ThreatIntelligenceReport scan={scan} loading={intelligenceLoading} />
+      )}
 
       {/* Rule-based security report (always shown) */}
       <div>

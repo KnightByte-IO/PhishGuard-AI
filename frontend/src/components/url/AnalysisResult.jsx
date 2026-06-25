@@ -9,12 +9,14 @@ import { Link } from 'react-router-dom';
 import RiskScoreGauge from './RiskScoreGauge';
 import SecurityCheckList from './SecurityCheckList';
 import AiExplanationPanel from '../threat/AiExplanationPanel';
+import ThreatIntelligenceReport from '../threat/ThreatIntelligenceReport';
 import { getRiskStyle } from '../../utils/riskHelpers';
-import { explainUrl } from '../../services/urlService';
+import { explainUrl, runThreatIntelligence } from '../../services/urlService';
 
 function AnalysisResult({ scan: initialScan, onScanUpdate }) {
   const [scan, setScan] = useState(initialScan);
   const [aiLoading, setAiLoading] = useState(false);
+  const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(initialScan?.aiGenerated || false);
   const [aiError, setAiError] = useState(null);
 
@@ -39,6 +41,20 @@ function AnalysisResult({ scan: initialScan, onScanUpdate }) {
       setAiAvailable(false);
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleRunIntelligence = async () => {
+    setIntelligenceLoading(true);
+
+    try {
+      const response = await runThreatIntelligence(scan._id);
+      setScan(response.data);
+      onScanUpdate?.(response.data);
+    } catch (err) {
+      console.error('Intelligence scan failed:', err);
+    } finally {
+      setIntelligenceLoading(false);
     }
   };
 
@@ -115,24 +131,26 @@ function AnalysisResult({ scan: initialScan, onScanUpdate }) {
         </div>
       </div>
 
-      {/* AI Explanation trigger */}
-      {!scan.aiGenerated && !aiLoading && !aiError && (
-        <div className="card border border-cyber-accent/20 bg-cyber-accent/5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="text-white font-semibold">Want a detailed explanation?</h3>
-              <p className="text-cyber-muted text-sm mt-1">
-                Gemini AI will explain these scanner findings in plain language — it will not change the risk score.
-              </p>
-            </div>
-            <button
-              onClick={handleGenerateAi}
-              className="btn-primary whitespace-nowrap"
-            >
-              🤖 Generate AI Explanation
-            </button>
-          </div>
-        </div>
+      {/* Intelligence + AI action buttons */}
+      <div className="flex flex-wrap gap-3">
+        {!scan.intelligenceGenerated && (
+          <button
+            onClick={handleRunIntelligence}
+            disabled={intelligenceLoading}
+            className="btn-primary text-sm disabled:opacity-50"
+          >
+            {intelligenceLoading ? 'Scanning sources...' : '🛡️ Run Threat Intelligence'}
+          </button>
+        )}
+        {!scan.aiGenerated && !aiLoading && !aiError && (
+          <button onClick={handleGenerateAi} className="btn-secondary text-sm">
+            🤖 Generate AI Explanation
+          </button>
+        )}
+      </div>
+
+      {(scan.intelligenceGenerated || intelligenceLoading) && (
+        <ThreatIntelligenceReport scan={scan} loading={intelligenceLoading} />
       )}
 
       {(scan.aiGenerated || aiLoading || aiError) && (
