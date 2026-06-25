@@ -25,7 +25,7 @@ function Hero() {
           </h1>
 
           <p className="text-lg text-cyber-muted max-w-2xl mx-auto mb-8 leading-relaxed">
-            PhishGuard AI analyzes URLs, emails, SMS, and website screenshots
+            PhishGuard AI analyzes URLs
             to identify threats — and explains exactly why something is dangerous.
           </p>
 

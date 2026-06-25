@@ -7,7 +7,7 @@
 
 import { getRiskStyle } from '../../utils/riskHelpers';
 
-function AiExplanationPanel({ scan, aiAvailable, aiError, loading }) {
+function AiExplanationPanel({ scan, aiAvailable, aiError, loading, explanationSource }) {
   if (loading) {
     return (
       <div className="card border border-cyber-accent/30 bg-cyber-accent/5">
@@ -39,13 +39,15 @@ function AiExplanationPanel({ scan, aiAvailable, aiError, loading }) {
 
   const style = getRiskStyle(scan.riskLevel);
 
+  const isGemini = explanationSource === 'gemini' || scan.explanationSource === 'gemini';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg">🤖</span>
-        <h3 className="text-lg font-semibold text-white">AI Threat Explanation</h3>
+        <h3 className="text-lg font-semibold text-white">Threat Explanation</h3>
         <span className="text-xs font-mono text-cyber-accent bg-cyber-accent/10 px-2 py-0.5 rounded">
-          Powered by Gemini
+          {isGemini ? 'Powered by Gemini' : 'Smart Analysis'}
         </span>
       </div>
 
@@ -55,16 +57,16 @@ function AiExplanationPanel({ scan, aiAvailable, aiError, loading }) {
           <h4 className="text-sm font-medium text-cyber-muted mb-2">Summary</h4>
           <p className="text-white text-sm leading-relaxed">{scan.summary}</p>
         </div>
-        <div className="card border border-cyber-danger/30 bg-cyber-danger/5">
+        <div className={`card border ${style.border} ${style.bg}`}>
           <h4 className="text-sm font-medium text-cyber-muted mb-2">Threat Type</h4>
-          <p className="text-cyber-danger font-semibold text-lg">{scan.attackType}</p>
+          <p className={`${style.text} font-semibold text-lg`}>{scan.attackType}</p>
         </div>
       </div>
 
       {/* AI Reasons + Recommendations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">
-          <h4 className="text-sm font-semibold text-white mb-3">AI Reasons</h4>
+          <h4 className="text-sm font-semibold text-white mb-3">Detailed Analysis</h4>
           <ul className="space-y-2">
             {(scan.aiReasons || []).map((reason, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-300">

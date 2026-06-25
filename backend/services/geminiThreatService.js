@@ -8,7 +8,7 @@
  * The rule-based URL scanner is the single source of truth.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getGeminiModel, GEMINI_MODELS, isGeminiConfigured } = require('../utils/geminiConfig');
 
 /**
  * Build the prompt sent to Gemini.
@@ -100,15 +100,11 @@ const buildScanReport = (scan) => ({
 
 /**
  * Call Gemini API and return structured threat explanation.
- *
- * @param {Object} scan - Mongoose UrlScan document
- * @returns {Promise<Object>} Parsed explanation JSON
+ * Tries multiple models if the configured one is unavailable.
  */
 const generateThreatExplanation = async (scan) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    const error = new Error('GEMINI_API_KEY is not configured on the server');
+  if (!isGeminiConfigured()) {
+    const error = new Error('Gemini API key not configured');
     error.code = 'GEMINI_CONFIG';
     throw error;
   }
@@ -116,23 +112,34 @@ const generateThreatExplanation = async (scan) => {
   const scanReport = buildScanReport(scan);
   const prompt = buildPrompt(scanReport);
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
-    generationConfig: {
-      temperature: 0.3,
-      responseMimeType: 'application/json',
-    },
-  });
+  const modelsToTry = [...new Set(GEMINI_MODELS)];
+  let lastError = null;
 
-  const result = await model.generateContent(prompt);
-  const responseText = result.response.text();
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGeminiModel(modelName);
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
 
-  if (!responseText) {
-    throw new Error('Gemini returned an empty response');
+      if (!responseText) {
+        throw new Error('Gemini returned an empty response');
+      }
+
+      return parseGeminiJson(responseText);
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error.message?.includes('404') ||
+        error.message?.includes('not found') ||
+        error.message?.includes('is not supported');
+
+      if (!retryable) {
+        throw error;
+      }
+    }
   }
 
-  return parseGeminiJson(responseText);
+  throw lastError || new Error('All Gemini models failed');
 };
 
 module.exports = {

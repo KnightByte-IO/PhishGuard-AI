@@ -22,6 +22,7 @@ function ThreatReportDetailPage() {
   const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [explanationSource, setExplanationSource] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -30,6 +31,7 @@ function ThreatReportDetailPage() {
         const response = await getThreatReport(scanId);
         setScan(response.data);
         setAiAvailable(response.data.aiGenerated);
+        setExplanationSource(response.data.explanationSource || null);
       } catch (err) {
         setError(err.response?.data?.message || 'Report not found');
       } finally {
@@ -47,6 +49,7 @@ function ThreatReportDetailPage() {
       const response = await explainUrl(scanId);
       setScan(response.data);
       setAiAvailable(response.aiAvailable);
+      setExplanationSource(response.explanationSource || response.data?.explanationSource || null);
       if (!response.aiAvailable) {
         setAiError(response.aiError || 'AI explanation unavailable.');
       }
@@ -89,6 +92,7 @@ function ThreatReportDetailPage() {
         scan={scan}
         aiAvailable={aiAvailable}
         aiError={aiError}
+        explanationSource={explanationSource}
         onGenerateAi={handleGenerateAi}
         aiLoading={aiLoading}
         onRunIntelligence={handleRunIntelligence}

@@ -19,6 +19,7 @@ function AnalysisResult({ scan: initialScan, onScanUpdate }) {
   const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(initialScan?.aiGenerated || false);
   const [aiError, setAiError] = useState(null);
+  const [explanationSource, setExplanationSource] = useState(initialScan?.explanationSource || null);
 
   if (!scan) return null;
 
@@ -32,6 +33,7 @@ function AnalysisResult({ scan: initialScan, onScanUpdate }) {
       const response = await explainUrl(scan._id);
       setScan(response.data);
       setAiAvailable(response.aiAvailable);
+      setExplanationSource(response.explanationSource || response.data?.explanationSource || null);
       if (!response.aiAvailable) {
         setAiError(response.aiError || 'AI explanation unavailable.');
       }
@@ -159,6 +161,7 @@ function AnalysisResult({ scan: initialScan, onScanUpdate }) {
           aiAvailable={aiAvailable}
           aiError={aiError}
           loading={aiLoading}
+          explanationSource={explanationSource}
         />
       )}
     </div>

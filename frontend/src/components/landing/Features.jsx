@@ -11,21 +11,6 @@ const features = [
     description: 'Analyze suspicious links for phishing, malware, and domain spoofing in seconds.',
   },
   {
-    icon: '📧',
-    title: 'Email Analyzer',
-    description: 'Detect phishing emails with AI that reads tone, sender patterns, and malicious links.',
-  },
-  {
-    icon: '💬',
-    title: 'SMS Analyzer',
-    description: 'Identify smishing attempts in text messages before you click or reply.',
-  },
-  {
-    icon: '📸',
-    title: 'Screenshot Analyzer',
-    description: 'Upload website screenshots — our AI inspects visual phishing indicators.',
-  },
-  {
     icon: '🧠',
     title: 'AI Explanations',
     description: 'Every result includes clear reasons — not just Safe or Dangerous, but why.',

@@ -11,9 +11,6 @@ import { useAuth } from '../hooks/useAuth';
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊', end: true },
   { path: '/url-scanner', label: 'URL Scanner', icon: '🔗' },
-  { path: '/dashboard/email-analyzer', label: 'Email Analyzer', icon: '📧' },
-  { path: '/dashboard/sms-analyzer', label: 'SMS Analyzer', icon: '💬' },
-  { path: '/dashboard/screenshot-analyzer', label: 'Screenshot Analyzer', icon: '📸' },
   { path: '/dashboard/threat-reports', label: 'Threat Reports', icon: '⚠️' },
   { path: '/dashboard/history', label: 'History', icon: '📜' },
   { path: '/dashboard/settings', label: 'Settings', icon: '⚙️' },

@@ -12,21 +12,33 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const urlRoutes = require('./routes/urlRoutes');
-const emailRoutes = require('./routes/emailRoutes');
-const smsRoutes = require('./routes/smsRoutes');
-const screenshotRoutes = require('./routes/screenshotRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 
 // Middleware — parse JSON request bodies
-// Increased limit so screenshot images can be sent as base64 safely.
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 
 // CORS — allow frontend (React) to call this API from a different port
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const allowed = process.env.CLIENT_URL;
+      if (allowed && origin === allowed) {
+        return callback(null, true);
+      }
+
+      // Local dev: Vite may use 5173, 5174, 5175, etc. when ports are busy
+      if (/^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
@@ -42,9 +54,6 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/url', urlRoutes);
-app.use('/api/email', emailRoutes);
-app.use('/api/sms', smsRoutes);
-app.use('/api/screenshot', screenshotRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // 404 handler for unknown API routes

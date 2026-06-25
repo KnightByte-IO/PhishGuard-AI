@@ -245,6 +245,15 @@ const urlScanSchema = new mongoose.Schema(
       default: null,
     },
 
+    /**
+     * explanationSource — How the explanation was generated: gemini or rule-based.
+     */
+    explanationSource: {
+      type: String,
+      enum: ['gemini', 'rule-based'],
+      default: null,
+    },
+
     // ─── Threat Intelligence Engine (Milestone 4) ───────────────────────────
 
     /**

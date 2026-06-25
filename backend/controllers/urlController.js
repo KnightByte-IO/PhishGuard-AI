@@ -105,11 +105,12 @@ const explainUrl = async (req, res) => {
     res.status(200).json({
       success: true,
       message: result.aiAvailable
-        ? 'AI threat explanation generated'
+        ? 'Threat explanation generated'
         : result.aiError,
       data: result.scan,
       aiAvailable: result.aiAvailable,
       aiError: result.aiError || null,
+      explanationSource: result.explanationSource || null,
     });
   } catch (error) {
     res.status(error.statusCode || 500).json({

@@ -55,7 +55,7 @@ function ThreatIntelligenceReport({ scan, loading }) {
               Running Threat Intelligence Scan...
             </p>
             <p className="text-cyber-muted text-xs mt-1">
-              Querying VirusTotal, WHOIS, Safe Browsing, and URLScan.io — this may take up to 30 seconds.
+              Querying VirusTotal, WHOIS, Safe Browsing, and URLScan.io — this may take up to 60 seconds.
             </p>
           </div>
         </div>
@@ -258,6 +258,11 @@ function ThreatIntelligenceReport({ scan, loading }) {
           available={us.available}
           error={us.error}
         >
+          {us.dataSource === 'historical' && (
+            <p className="text-xs text-cyber-muted mb-3">
+              Live scan blocked — showing archived public scan data.
+            </p>
+          )}
           <dl className="space-y-2 text-sm">
             <div>
               <dt className="text-cyber-muted text-xs">Final URL</dt>

@@ -47,13 +47,7 @@ function DashboardHome() {
             <span className="text-cyber-accent">→</span> Scan suspicious URLs
           </li>
           <li className="flex items-center gap-2">
-            <span className="text-cyber-accent">→</span> Analyze phishing emails
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-cyber-accent">→</span> Check SMS for smishing
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-cyber-accent">→</span> Upload screenshots for analysis
+            <span className="text-cyber-accent">→</span> View threat reports and scan history
           </li>
         </ul>
       </div>

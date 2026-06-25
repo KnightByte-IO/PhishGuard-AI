@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     question: 'What can I analyze?',
-    answer: 'URLs, emails, SMS/text messages, and website screenshots. Each analyzer will be available in future milestones.',
+    answer: 'URLs, with rule-based scanning, threat intelligence, and AI explanations.',
   },
   {
     question: 'Is PhishGuard AI free to use?',

@@ -3,22 +3,37 @@
  *
  * Orchestrates the AI explanation flow:
  *   1. Fetch scan from database
- *   2. Send scan report to Gemini
- *   3. Store explanation on the scan document
- *   4. Return combined result (rule-based + AI)
- *
- * If Gemini fails, the rule-based scan is still returned.
+ *   2. Try Gemini when a valid API key is configured
+ *   3. Fall back to rule-based explanation if Gemini is unavailable
+ *   4. Store explanation on the scan document
  */
 
 const UrlScan = require('../models/UrlScan');
 const geminiThreatService = require('./geminiThreatService');
+const fallbackExplanationService = require('./fallbackExplanationService');
+const { isGeminiConfigured } = require('../utils/geminiConfig');
+
+const saveExplanation = async (scan, explanation, source) => {
+  scan.summary = explanation.summary;
+  scan.attackType = explanation.attackType;
+  scan.aiReasons = explanation.reasons;
+  scan.recommendations = explanation.recommendations;
+  scan.securityTips = explanation.securityTips;
+  scan.aiGenerated = true;
+  scan.aiGeneratedAt = new Date();
+  scan.explanationSource = source;
+
+  await scan.save();
+
+  return {
+    scan,
+    aiAvailable: true,
+    explanationSource: source,
+  };
+};
 
 /**
  * Generate and store AI explanation for an existing URL scan.
- *
- * @param {string} userId - Logged-in user's ID
- * @param {string} scanId - MongoDB _id of the UrlScan document
- * @returns {Object} { scan, aiAvailable, aiError? }
  */
 const explainScan = async (userId, scanId) => {
   const scan = await UrlScan.findOne({ _id: scanId, userId });
@@ -29,32 +44,19 @@ const explainScan = async (userId, scanId) => {
     throw error;
   }
 
-  try {
-    const explanation = await geminiThreatService.generateThreatExplanation(scan);
-
-    scan.summary = explanation.summary;
-    scan.attackType = explanation.attackType;
-    scan.aiReasons = explanation.reasons;
-    scan.recommendations = explanation.recommendations;
-    scan.securityTips = explanation.securityTips;
-    scan.aiGenerated = true;
-    scan.aiGeneratedAt = new Date();
-
-    await scan.save();
-
-    return {
-      scan,
-      aiAvailable: true,
-    };
-  } catch (error) {
-    console.error('Gemini explanation failed:', error.message);
-
-    return {
-      scan,
-      aiAvailable: false,
-      aiError: 'AI explanation unavailable.',
-    };
+  if (isGeminiConfigured()) {
+    try {
+      const explanation = await geminiThreatService.generateThreatExplanation(scan);
+      return saveExplanation(scan, explanation, 'gemini');
+    } catch (error) {
+      console.error('Gemini explanation failed, using fallback:', error.message);
+    }
+  } else {
+    console.warn('Gemini not configured — using rule-based explanation fallback');
   }
+
+  const explanation = fallbackExplanationService.generateFallbackExplanation(scan);
+  return saveExplanation(scan, explanation, 'rule-based');
 };
 
 /**
@@ -74,7 +76,6 @@ const getThreatReport = async (userId, scanId) => {
 
 /**
  * List threat reports for the Threat Reports page.
- * Returns scans sorted by date (newest first).
  */
 const getThreatReports = async (userId, limit = 20) => {
   return UrlScan.find({ userId })
@@ -97,7 +98,6 @@ const getThreatDashboardData = async (userId) => {
       .select('attackType'),
   ]);
 
-  // Count attack types to find the most common
   const attackCounts = {};
   allWithAttackType.forEach((scan) => {
     if (scan.attackType) {

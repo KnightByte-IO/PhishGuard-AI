@@ -10,6 +10,11 @@
 
 const { success, failure } = require('../utils/serviceResult');
 
+const POLL_INTERVAL_MS = 5000;
+const POLL_MAX_ATTEMPTS = 12; // up to ~60 seconds
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
  * Convert a URL to VirusTotal's URL identifier (base64url without padding).
  */
@@ -19,6 +24,32 @@ const urlToVtId = (url) => {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
+};
+
+/**
+ * Parse VirusTotal stats from a URL report or completed analysis object.
+ */
+const parseVtStats = (data) => {
+  const attrs = data?.data?.attributes || {};
+  const stats = attrs.last_analysis_stats || attrs.stats || {};
+  const results = attrs.last_analysis_results || attrs.results || {};
+
+  const detectedVendors = Object.entries(results)
+    .filter(([, result]) => result.category === 'malicious' || result.category === 'suspicious')
+    .map(([vendor, result]) => ({
+      vendor,
+      category: result.category,
+      result: result.result,
+    }));
+
+  return {
+    maliciousCount: stats.malicious || 0,
+    suspiciousCount: stats.suspicious || 0,
+    harmlessCount: stats.harmless || 0,
+    undetectedCount: stats.undetected || 0,
+    detectedVendors,
+    totalEngines: Object.keys(results).length,
+  };
 };
 
 /**
@@ -34,8 +65,13 @@ const submitUrl = async (url, apiKey) => {
     body: new URLSearchParams({ url }),
   });
 
+  if (response.status === 429) {
+    throw new Error('Rate limit exceeded — free tier allows 4 requests/minute');
+  }
+
   if (!response.ok) {
-    throw new Error(`Submit failed (${response.status})`);
+    const body = await response.text().catch(() => '');
+    throw new Error(`Submit failed (${response.status})${body ? `: ${body.slice(0, 120)}` : ''}`);
   }
 
   return response.json();
@@ -55,11 +91,48 @@ const fetchUrlReport = async (url, apiKey) => {
     return null;
   }
 
+  if (response.status === 429) {
+    throw new Error('Rate limit exceeded — free tier allows 4 requests/minute');
+  }
+
   if (!response.ok) {
     throw new Error(`Report fetch failed (${response.status})`);
   }
 
   return response.json();
+};
+
+/**
+ * Poll a VirusTotal analysis until it completes or times out.
+ */
+const pollAnalysis = async (analysisId, apiKey) => {
+  for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt += 1) {
+    const response = await fetch(
+      `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
+      { headers: { 'x-apikey': apiKey } }
+    );
+
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded — free tier allows 4 requests/minute');
+    }
+
+    if (!response.ok) {
+      throw new Error(`Analysis poll failed (${response.status})`);
+    }
+
+    const analysis = await response.json();
+    const status = analysis.data?.attributes?.status;
+
+    if (status === 'completed') {
+      return analysis;
+    }
+
+    if (attempt < POLL_MAX_ATTEMPTS - 1) {
+      await sleep(POLL_INTERVAL_MS);
+    }
+  }
+
+  return null;
 };
 
 /**
@@ -78,37 +151,31 @@ const lookupUrl = async (url) => {
   try {
     let report = await fetchUrlReport(url, apiKey);
 
-    // If URL not in VT database yet, submit it and wait briefly
     if (!report) {
-      await submitUrl(url, apiKey);
-      await new Promise((resolve) => setTimeout(resolve, 15000));
+      const submitResponse = await submitUrl(url, apiKey);
+      const analysisId = submitResponse.data?.id;
+
+      if (!analysisId) {
+        return failure('VirusTotal', new Error('Submit succeeded but no analysis ID returned'));
+      }
+
+      const completedAnalysis = await pollAnalysis(analysisId, apiKey);
+
+      if (!completedAnalysis) {
+        return failure(
+          'VirusTotal',
+          new Error('Analysis still in progress — wait a minute and run intelligence again')
+        );
+      }
+
       report = await fetchUrlReport(url, apiKey);
+
+      if (!report) {
+        return success(parseVtStats(completedAnalysis));
+      }
     }
 
-    if (!report) {
-      return failure('VirusTotal', new Error('Report not ready yet — try again later'));
-    }
-
-    const stats = report.data?.attributes?.last_analysis_stats || {};
-    const results = report.data?.attributes?.last_analysis_results || {};
-
-    // Build list of vendors that detected a threat
-    const detectedVendors = Object.entries(results)
-      .filter(([, result]) => result.category === 'malicious' || result.category === 'suspicious')
-      .map(([vendor, result]) => ({
-        vendor,
-        category: result.category,
-        result: result.result,
-      }));
-
-    return success({
-      maliciousCount: stats.malicious || 0,
-      suspiciousCount: stats.suspicious || 0,
-      harmlessCount: stats.harmless || 0,
-      undetectedCount: stats.undetected || 0,
-      detectedVendors,
-      totalEngines: Object.keys(results).length,
-    });
+    return success(parseVtStats(report));
   } catch (error) {
     return failure('VirusTotal', error);
   }

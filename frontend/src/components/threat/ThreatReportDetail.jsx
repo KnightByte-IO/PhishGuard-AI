@@ -16,6 +16,7 @@ function ThreatReportDetail({
   scan,
   aiAvailable,
   aiError,
+  explanationSource,
   onGenerateAi,
   aiLoading,
   onRunIntelligence,
@@ -130,6 +131,7 @@ function ThreatReportDetail({
           aiAvailable={aiAvailable}
           aiError={aiError}
           loading={aiLoading}
+          explanationSource={explanationSource}
         />
       )}
 

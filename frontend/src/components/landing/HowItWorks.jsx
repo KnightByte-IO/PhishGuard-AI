@@ -8,7 +8,7 @@ const steps = [
   {
     step: '01',
     title: 'Submit Content',
-    description: 'Paste a URL, email, SMS, or upload a screenshot you want to analyze.',
+    description: 'Paste a URL you want to analyze.',
   },
   {
     step: '02',
